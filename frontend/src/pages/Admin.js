@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 export default function Admin() {
-  const API = "http://localhost:5000";
+  const API = process.env.REACT_APP_API_URL;
   const [regs, setRegs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewImage, setViewImage] = useState(null);

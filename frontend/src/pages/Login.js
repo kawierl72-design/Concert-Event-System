@@ -10,7 +10,7 @@ export default function Login() {
   const submit = async (e) => {
     e.preventDefault();
 
-    const API_URL = "http://localhost:5000/api/admin/login"; // ✅ FIXED URL
+    const API_URL = process.env.REACT_APP_API_URL; // ✅ FIXED URL
 
     try {
       const res = await axios.post(API_URL, form, {
