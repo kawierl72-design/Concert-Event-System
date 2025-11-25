@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: concert-registration
-    env: node
-    plan: free
-    disk: 1024
-    repo: 'https://github.com/yourusername/your-repo' # update
-    buildCommand: 'cd backend && npm install && cd ../frontend && npm install && npm run build'
-    startCommand: 'cd backend && npm start'
