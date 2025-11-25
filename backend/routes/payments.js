@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || '');
 const paypal = require('paypal-rest-sdk');
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 paypal.configure({
   mode: process.env.PAYPAL_MODE || 'sandbox',

@@ -1,4 +1,7 @@
 const jwt = require('jsonwebtoken');
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 exports.protect = (req, res, next) => {
   const auth = req.headers.authorization;

@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 // ----------------------------------------
 // POST /api/admin/login

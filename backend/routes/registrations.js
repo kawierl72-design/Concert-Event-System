@@ -4,6 +4,9 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const Registration = require("../models/Registration");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 // -----------------------------
 // Ensure uploads/ folder exists
