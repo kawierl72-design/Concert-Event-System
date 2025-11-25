@@ -1,0 +1,6 @@
+/* extra animations and overrides */
+.fade-in { animation: fadeIn 600ms ease both; }
+@keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to { opacity:1; transform: translateY(0);} }
+
+.ticket-card { border-radius: 12px; box-shadow: 0 10px 30px rgba(2,6,23,0.08); padding:12px; }
+.btn-raise:hover { transform: translateY(-3px); transition: transform 180ms ease; }
