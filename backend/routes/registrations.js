@@ -4,16 +4,15 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const Registration = require("../models/Registration");
-const dotenv = require("dotenv");
-
-dotenv.config();
+require("dotenv").config();
 
 // -----------------------------
 // Ensure uploads/ folder exists
 // -----------------------------
 const uploadDir = path.join(__dirname, "..", "uploads");
+
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
+  fs.mkdirSync(uploadDir, { recursive: true });
   console.log("📁 Created uploads/ folder");
 }
 
@@ -21,37 +20,45 @@ if (!fs.existsSync(uploadDir)) {
 // Multer Storage Config
 // -----------------------------
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
-  filename: function (req, file, cb) {
+  filename: (req, file, cb) => {
     const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname).toLowerCase();
     cb(null, unique + ext);
-  }
+  },
 });
 
-// Only accept image files
+// -----------------------------
+// Multer Upload Config
+// ✅ LIMIT SIZE
+// ✅ IMAGE ONLY
+// -----------------------------
 const upload = multer({
   storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith("image/")) {
-      return cb(new Error("Only image files are allowed"), false);
+      return cb(new Error("Only image files are allowed"));
     }
     cb(null, true);
-  }
+  },
 });
 
 // -----------------------------
 // POST /api/registrations
-// Save Registration
 // -----------------------------
 router.post("/", upload.single("image"), async (req, res) => {
   try {
+    // ✅ DEBUG (keep while testing)
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: "Image upload failed. Please attach a JPG/PNG file.",
+        message: "Image upload failed. Please attach a JPG/PNG image.",
       });
     }
 
@@ -65,30 +72,29 @@ router.post("/", upload.single("image"), async (req, res) => {
       address: req.body.address,
       emergencyContact: req.body.emergencyContact,
       notes: req.body.notes,
-      paymentImage: req.file.filename,
-      status: "pending"
+      paymentImage: req.file.filename, // ✅ MATCH FRONTEND
+      status: "pending",
     });
 
     await reg.save();
 
     res.status(201).json({
       success: true,
-      message: "Registration saved successfully!",
+      message: "Registration saved successfully",
       registration: reg,
     });
   } catch (err) {
     console.error("❌ SERVER ERROR:", err);
+
     res.status(500).json({
       success: false,
-      message: "Server error occurred.",
-      error: err.message,
+      message: err.message || "Server error",
     });
   }
 });
 
 // -----------------------------
 // GET /api/registrations/all
-// Admin: Fetch ALL registrations
 // -----------------------------
 router.get("/all", async (req, res) => {
   try {
@@ -108,11 +114,12 @@ router.get("/all", async (req, res) => {
 
 // -----------------------------
 // PUT /api/registrations/confirm/:id
-// CONFIRM REGISTRATION
 // -----------------------------
 router.put("/confirm/:id", async (req, res) => {
   try {
-    await Registration.findByIdAndUpdate(req.params.id, { status: "confirmed" });
+    await Registration.findByIdAndUpdate(req.params.id, {
+      status: "confirmed",
+    });
     res.json({ success: true, message: "Registration confirmed" });
   } catch (err) {
     console.error("❌ Confirm Error:", err);
@@ -122,11 +129,12 @@ router.put("/confirm/:id", async (req, res) => {
 
 // -----------------------------
 // PUT /api/registrations/reject/:id
-// REJECT REGISTRATION
 // -----------------------------
 router.put("/reject/:id", async (req, res) => {
   try {
-    await Registration.findByIdAndUpdate(req.params.id, { status: "rejected" });
+    await Registration.findByIdAndUpdate(req.params.id, {
+      status: "rejected",
+    });
     res.json({ success: true, message: "Registration rejected" });
   } catch (err) {
     console.error("❌ Reject Error:", err);
@@ -136,7 +144,6 @@ router.put("/reject/:id", async (req, res) => {
 
 // -----------------------------
 // DELETE /api/registrations/:id
-// Admin: Delete Registration + Image
 // -----------------------------
 router.delete("/:id", async (req, res) => {
   try {
@@ -146,28 +153,22 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ message: "Registration not found" });
     }
 
-    // Delete image file
-    if (reg.paymentImage) {
-      const imgPath = path.join(__dirname, "..", "uploads", reg.paymentImage);
-      if (fs.existsSync(imgPath)) {
-        fs.unlinkSync(imgPath);
-      }
+    const imgPath = path.join(uploadDir, reg.paymentImage);
+    if (fs.existsSync(imgPath)) {
+      fs.unlinkSync(imgPath);
     }
 
     await reg.deleteOne();
 
     res.json({ message: "Registration deleted successfully" });
-  } catch (error) {
-    res.status(500).json({
-      message: "Delete failed",
-      error: error.message,
-    });
+  } catch (err) {
+    console.error("❌ Delete error:", err);
+    res.status(500).json({ message: "Delete failed" });
   }
 });
 
 // -----------------------------
 // GET /api/registrations/export/csv
-// Admin: Export All Records to CSV
 // -----------------------------
 router.get("/export/csv", async (req, res) => {
   try {
@@ -181,7 +182,10 @@ router.get("/export/csv", async (req, res) => {
     });
 
     res.setHeader("Content-Type", "text/csv");
-    res.setHeader("Content-Disposition", "attachment; filename=registrations.csv");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=registrations.csv"
+    );
     res.send(csv);
   } catch (err) {
     console.error("❌ CSV export error:", err);
