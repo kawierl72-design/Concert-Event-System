@@ -16,15 +16,14 @@ const app = express();
 connectDB();
 
 /* =============================
-   ✅ CORS (RENDER + LOCAL)
+   ✅ CORS — FIXED FOR RENDER
+   (THIS IS THE MAIN FIX)
 ============================= */
 app.use(
   cors({
-    origin: [
-      process.env.FRONTEND_URL,      // ✅ Production frontend (Vercel)
-      "http://localhost:3000"        // ✅ Local development
-    ],
-    credentials: true,
+    origin: "*",       // ✅ ALLOW ALL (to stop submission failed)
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
